@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "ShiggyCord",
+      "name": "PlaceholderCord",
       "dependencies": {
         "@gullerya/object-observer": "latest",
         "@tanstack/react-query": "latest",
