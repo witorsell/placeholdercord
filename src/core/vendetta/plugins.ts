@@ -123,7 +123,7 @@ export const VdPluginManager = {
           createMMKVBackend(plugin.id),
         ),
       },
-      logger: new LoggerClass(`ShiggyCord » ${plugin.manifest.name}`),
+      logger: new LoggerClass(`PlaceholderCord » ${plugin.manifest.name}`),
     };
     const pluginString = `vendetta=>{return ${plugin.js}}\n//# sourceURL=${plugin.id}`;
 

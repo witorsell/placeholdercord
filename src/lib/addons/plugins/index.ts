@@ -518,7 +518,7 @@ export async function startPlugin(
       // This is a minimal, best-effort context marker. It will be cleared immediately
       // after the synchronous evaluation step below.
       try {
-        (window as any).__SHIGGY_CURRENT_PLUGIN = id;
+        (window as any).__PLACEHOLDER_CURRENT_PLUGIN = id;
       } catch {
         // ignore if environment prevents writing to window
       }
@@ -538,7 +538,7 @@ export async function startPlugin(
     } finally {
       // Clear the immediate evaluation marker - instantiation happens next.
       try {
-        (window as any).__SHIGGY_CURRENT_PLUGIN = null;
+        (window as any).__PLACEHOLDER_CURRENT_PLUGIN = null;
       } catch {}
     }
 
@@ -547,7 +547,7 @@ export async function startPlugin(
       // During instantiation we again mark the current plugin so synchronous
       // work performed by the plugin's top-level code is attributable.
       try {
-        (window as any).__SHIGGY_CURRENT_PLUGIN = id;
+        (window as any).__PLACEHOLDER_CURRENT_PLUGIN = id;
       } catch {}
 
       const api = createBunnyPluginApi(id);
@@ -585,7 +585,7 @@ export async function startPlugin(
     } finally {
       // Always clear the global plugin marker after instantiation attempt.
       try {
-        (window as any).__SHIGGY_CURRENT_PLUGIN = null;
+        (window as any).__PLACEHOLDER_CURRENT_PLUGIN = null;
       } catch {}
     }
   } else {

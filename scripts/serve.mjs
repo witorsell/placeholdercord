@@ -19,7 +19,7 @@ export function serve(options) {
     if (pathname?.endsWith(".js")) {
       try {
         let fileToServe;
-        if (pathname === "/shiggycord.min.js") {
+        if (pathname === "/placeholdercord.min.js") {
           const { config, context, timeTook } = await buildBundle({
             minify: true,
           });
@@ -30,7 +30,7 @@ export function serve(options) {
             true,
           );
           fileToServe = config.outfile.replace(/\.js$/, ".min.js");
-        } else if (pathname === "/shiggycord.js") {
+        } else if (pathname === "/placeholdercord.js") {
           const { config, context, timeTook } = await buildBundle();
           printBuildSuccess(context.hash, args["release-branch"], timeTook);
           fileToServe = config.outfile;
@@ -55,15 +55,15 @@ export function serve(options) {
 
   server.listen(args.port ?? 4040);
 
-  console.info(chalk.bold.yellowBright("Serving ShiggyCord on:"));
+  console.info(chalk.bold.yellowBright("Serving PlaceholderCord on:"));
 
   const netInterfaces = os.networkInterfaces();
   for (const netinterfaces of Object.values(netInterfaces)) {
     for (const details of netinterfaces || []) {
       if (details.family !== "IPv4") continue;
       const port = chalk.green((args.port ?? 4040).toString());
-      console.info(`  http://${details.address}:${port}/shiggycord.js`);
-      console.info(`  http://${details.address}:${port}/shiggycord.min.js`);
+      console.info(`  http://${details.address}:${port}/placeholdercord.js`);
+      console.info(`  http://${details.address}:${port}/placeholdercord.min.js`);
     }
   }
 

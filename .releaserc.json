@@ -20,12 +20,12 @@
       {
         "assets": [
           {
-            "path": "dist/shiggycord.js",
-            "label": "ShiggyCord Bundle"
+            "path": "dist/placeholdercord.js",
+            "label": "PlaceholderCord Bundle"
           },
           {
-            "path": "dist/shiggycord.min.js",
-            "label": "ShiggyCord Bundle (minified)"
+            "path": "dist/placeholdercord.min.js",
+            "label": "PlaceholderCord Bundle (minified)"
           }
         ]
       }

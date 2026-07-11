@@ -13,7 +13,7 @@ export interface Logger {
 }
 
 export const LoggerClass = findByNameLazy("Logger");
-export const logger: Logger = new LoggerClass("ShiggyCord");
+export const logger: Logger = new LoggerClass("PlaceholderCord");
 
 let socket: WebSocket | undefined;
 let originalConsoleLog: any;

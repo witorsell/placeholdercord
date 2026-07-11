@@ -5,7 +5,7 @@ const { instead } = require("spitroast");
 // @ts-ignore - window is defined later in the bundle, so we assign it early
 globalThis.window = globalThis;
 
-async function initializeShiggyCord() {
+async function initializePlaceholderCord() {
   try {
     // Make 'freeze' and 'seal' do nothing
     Object.freeze = Object.seal = Object;
@@ -19,9 +19,9 @@ async function initializeShiggyCord() {
     console.log(stack ?? e?.toString?.() ?? e);
     alert(
       [
-        "Failed to load ShiggyCord!\n",
+        "Failed to load PlaceholderCord!\n",
         `Build Number: ${ClientInfoManager.getConstants().Build}`,
-        `ShiggyCord: ${version}`,
+        `PlaceholderCord: ${version}`,
         stack || e?.toString?.(),
       ].join("\n"),
     );
@@ -109,7 +109,7 @@ if (typeof window.__r === "undefined") {
     }
 
     const startDiscord = async () => {
-      await initializeShiggyCord();
+      await initializePlaceholderCord();
 
       for (const unpatch of unpatches) unpatch();
       unpatches.length = 0;
@@ -153,5 +153,5 @@ if (typeof window.__r === "undefined") {
     },
   });
 } else {
-  initializeShiggyCord();
+  initializePlaceholderCord();
 }

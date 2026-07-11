@@ -46,26 +46,26 @@ export function patchTabsUI(unpatches: (() => void | boolean)[]) {
       ...rendererConfigValue,
       VendettaCustomPage: {
         type: "route",
-        title: () => "ShiggyCord",
-        useTitle: () => "ShiggyCord",
+        title: () => "PlaceholderCord",
+        useTitle: () => "PlaceholderCord",
         screen: {
           route: "VendettaCustomPage",
           getComponent: () => CustomPageRenderer,
         },
       },
-      SHIGGYCORD_CUSTOM_PAGE: {
+      PLACEHOLDERCORD_CUSTOM_PAGE: {
         type: "route",
-        title: () => "ShiggyCord",
-        useTitle: () => "ShiggyCord",
+        title: () => "PlaceholderCord",
+        useTitle: () => "PlaceholderCord",
         screen: {
-          route: "SHIGGYCORD_CUSTOM_PAGE",
+          route: "PLACEHOLDERCORD_CUSTOM_PAGE",
           getComponent: () => CustomPageRenderer,
         },
       },
       BUNNY_CUSTOM_PAGE: {
         type: "route",
-        title: () => "ShiggyCord",
-        useTitle: () => "ShiggyCord",
+        title: () => "PlaceholderCord",
+        useTitle: () => "PlaceholderCord",
         screen: {
           route: "BUNNY_CUSTOM_PAGE",
           getComponent: () => CustomPageRenderer,

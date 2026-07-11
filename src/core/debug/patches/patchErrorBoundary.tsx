@@ -45,14 +45,14 @@ const ErrorBoundaryMount: React.FC<{
 };
 
 /**
- * Patch Discord's ErrorBoundary.render to return ShiggyCord's custom screen.
+ * Patch Discord's ErrorBoundary.render to return PlaceholderCord's custom screen.
  * Add defensive logging and fallback behavior so the patch won't break startup
  * if lookup fails. Also register lightweight global handlers to capture
  * uncaught errors for debugging.
  */
 export default function patchErrorBoundary() {
   try {
-    console.log("[ShiggyCord] patchErrorBoundary: registering");
+    console.log("[PlaceholderCord] patchErrorBoundary: registering");
   } catch {}
 
   // Attempt to attach after the ErrorBoundary render. If the context lookup
@@ -61,7 +61,7 @@ export default function patchErrorBoundary() {
   const ctxPromise = getErrorBoundaryContext().catch((err) => {
     try {
       console.warn(
-        "[ShiggyCord] patchErrorBoundary: context lookup failed",
+        "[PlaceholderCord] patchErrorBoundary: context lookup failed",
         err,
       );
     } catch {}
@@ -76,7 +76,7 @@ export default function patchErrorBoundary() {
 
       try {
         console.log(
-          "[ShiggyCord] patchErrorBoundary: rendering custom error screen",
+          "[PlaceholderCord] patchErrorBoundary: rendering custom error screen",
           this.state.error,
         );
       } catch {}
@@ -101,7 +101,7 @@ export default function patchErrorBoundary() {
     } catch (e) {
       try {
         console.error(
-          "[ShiggyCord] patchErrorBoundary: error while rendering custom screen",
+          "[PlaceholderCord] patchErrorBoundary: error while rendering custom screen",
           e,
         );
       } catch {}
@@ -127,10 +127,10 @@ export default function patchErrorBoundary() {
             null;
           ErrorUtils.setGlobalHandler((err: any, isFatal?: boolean) => {
             try {
-              console.error("[ShiggyCord] global uncaught error:", err, {
+              console.error("[PlaceholderCord] global uncaught error:", err, {
                 isFatal,
               });
-              (window as any).__SHIGGY_LAST_UNCAUGHT_ERROR = err;
+              (window as any).__PLACEHOLDER_LAST_UNCAUGHT_ERROR = err;
             } catch {}
             try {
               if (typeof prev === "function") prev(err, isFatal);
@@ -145,10 +145,10 @@ export default function patchErrorBoundary() {
           g.addEventListener("unhandledrejection", (ev: any) => {
             try {
               console.error(
-                "[ShiggyCord] unhandledrejection:",
+                "[PlaceholderCord] unhandledrejection:",
                 ev?.reason ?? ev,
               );
-              (window as any).__SHIGGY_LAST_UNCAUGHT_ERROR = ev?.reason ?? ev;
+              (window as any).__PLACEHOLDER_LAST_UNCAUGHT_ERROR = ev?.reason ?? ev;
             } catch {}
           });
         }
