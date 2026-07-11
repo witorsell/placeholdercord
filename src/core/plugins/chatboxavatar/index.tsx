@@ -112,7 +112,7 @@ export default defineCorePlugin({
         display: {
             name: "ChatboxAvatar",
             description: "Adds your avatar to the chatbox, with configurable press actions, a status cutout, and optional collapse while typing.",
-            authors: [{ name: "PlaceholderCord" }, { name: "rain (LampDelivery)" }],
+            authors: [{ name: "witorsell", id: "1524888236382617681" }, { name: "rain (LampDelivery)" }],
         },
     },
 
