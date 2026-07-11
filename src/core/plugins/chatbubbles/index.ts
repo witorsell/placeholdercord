@@ -14,7 +14,7 @@ export default defineCorePlugin({
         display: {
             name: "ChatBubbles",
             description: "Wraps messages in rounded chat bubbles with a rounded avatar. Drawn natively by PlaceholderXposed; toggle and restyle here.",
-            authors: [{ name: "PlaceholderCord" }, { name: "rain (original)" }],
+            authors: [{ name: "witorsell", id: "1524888236382617681" }, { name: "rain (original)" }],
         },
     },
 
