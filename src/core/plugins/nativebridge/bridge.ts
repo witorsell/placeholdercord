@@ -6,18 +6,26 @@ export type NativeInvoke = (
     payload: { Placeholder: { method: string; args: unknown[] } },
 ) => Promise<any>;
 
+/** What the native bubble methods return: the state actually applied. */
+export interface BubbleState {
+    enabled: boolean;
+    avatarRadius: number;
+    bubbleRadius: number;
+    bubbleColor: number;
+}
+
 export interface NativeApi {
     /** Generic escape hatch: call any registered native method by name. */
     call(method: string, ...args: unknown[]): Promise<any>;
     /** Names of every method the native side currently exposes. */
     modules(): Promise<string[]>;
     bubbles: {
-        setEnabled(enabled: boolean): Promise<void>;
+        setEnabled(enabled: boolean): Promise<BubbleState>;
         configure(opts: {
             avatarRadius?: number;
             bubbleRadius?: number;
             bubbleColor?: string;
-        }): Promise<void>;
+        }): Promise<BubbleState>;
     };
     fs: {
         read(path: string): Promise<string>;
