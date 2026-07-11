@@ -3,8 +3,8 @@ import { fs } from "@lib/api/native";
 import { BundleUpdaterManager } from "@lib/api/native/modules";
 import { settings } from "@lib/api/settings";
 import { logger } from "@lib/utils/logger";
-import { findByProps } from "@metro";
 import { React } from "@metro/common";
+import { Stack, TableRadioGroup, TableRadioRow } from "@metro/common/components";
 
 const { ScrollView, Text, Pressable } = require("react-native");
 
@@ -62,19 +62,8 @@ export default defineCorePlugin({
     },
 
     SettingsComponent() {
-        // Resolve the real component objects (findByProps), NOT the @metro/common/components
-        // proxyLazy exports: those present as callable functions, and React calling a
-        // forwardRef/memo object through the proxy throws "target is not callable".
-        const UI = findByProps("TableRadioGroup", "TableRadioRow", "Stack") ?? {};
-        const { TableRadioGroup, TableRadioRow, Stack } = UI;
-
         const [, forceUpdate] = React.useReducer((x: number) => ~x, 0);
         const cfg = getConfig();
-
-        if (!TableRadioGroup || !TableRadioRow || !Stack) {
-            return React.createElement(Text, { style: { color: "#888", padding: 16 } },
-                "ChatBubbles settings components could not be found on this Discord build.");
-        }
 
         const update = (patch: Partial<ChatBubblesSettings>) => {
             settings.chatbubbles = { ...getConfig(), ...patch };
