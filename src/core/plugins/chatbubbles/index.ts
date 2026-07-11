@@ -62,46 +62,52 @@ export default defineCorePlugin({
     },
 
     SettingsComponent() {
-        const { useState } = React;
-        const [cfg, setCfg] = useState<ChatBubblesSettings>(getConfig());
+        const cfg = getConfig();
 
         const update = (patch: Partial<ChatBubblesSettings>) => {
-            const next = { ...cfg, ...patch };
-            setCfg(next);
-            settings.chatbubbles = next;
+            settings.chatbubbles = { ...getConfig(), ...patch };
             writeBubbleConfig(true);
         };
 
+        // Mirrors the Developer page pattern: uncontrolled inputs (defaultValue + size)
+        // wrapped in a Stack inside the group. Putting a TextInput directly as a
+        // TableRowGroup child, or making it controlled, crashes the redesign renderer.
         return React.createElement(
             ScrollView,
             null,
             React.createElement(
                 Stack,
-                { spacing: 16, style: { padding: 12 } },
+                { style: { paddingVertical: 24, paddingHorizontal: 12 }, spacing: 24 },
                 React.createElement(
                     TableRowGroup,
                     { title: "Appearance" },
-                    React.createElement(TextInput, {
-                        label: "Avatar radius",
-                        value: String(cfg.avatarRadius),
-                        keyboardType: "numeric",
-                        placeholder: "12",
-                        onChange: (v: string) => update({ avatarRadius: Number(v.replace(/[^0-9]/g, "")) || 0 }),
-                    }),
-                    React.createElement(TextInput, {
-                        label: "Bubble radius",
-                        value: String(cfg.bubbleRadius),
-                        keyboardType: "numeric",
-                        placeholder: "40",
-                        onChange: (v: string) => update({ bubbleRadius: Number(v.replace(/[^0-9]/g, "")) || 0 }),
-                    }),
-                    React.createElement(TextInput, {
-                        label: "Bubble color",
-                        value: cfg.bubbleColor,
-                        placeholder: "#rrggbb or empty for default",
-                        isClearable: true,
-                        onChange: (v: string) => update({ bubbleColor: v }),
-                    }),
+                    React.createElement(
+                        Stack,
+                        { spacing: 12, style: { padding: 12 } },
+                        React.createElement(TextInput, {
+                            size: "md",
+                            label: "Avatar radius",
+                            placeholder: "12",
+                            defaultValue: String(cfg.avatarRadius),
+                            keyboardType: "numeric",
+                            onChange: (v: string) => update({ avatarRadius: Number(String(v).replace(/[^0-9]/g, "")) || 0 }),
+                        }),
+                        React.createElement(TextInput, {
+                            size: "md",
+                            label: "Bubble radius",
+                            placeholder: "40",
+                            defaultValue: String(cfg.bubbleRadius),
+                            keyboardType: "numeric",
+                            onChange: (v: string) => update({ bubbleRadius: Number(String(v).replace(/[^0-9]/g, "")) || 0 }),
+                        }),
+                        React.createElement(TextInput, {
+                            size: "md",
+                            label: "Bubble color",
+                            placeholder: "#rrggbb or empty for default",
+                            defaultValue: cfg.bubbleColor,
+                            onChange: (v: string) => update({ bubbleColor: String(v) }),
+                        }),
+                    ),
                 ),
                 React.createElement(
                     TableRowGroup,
@@ -110,7 +116,7 @@ export default defineCorePlugin({
                         label: "Reload to apply",
                         subLabel: "Bubbles are drawn natively, so changes apply after a reload.",
                         onPress: () => {
-                            writeBubbleConfig(true).then(() => BundleUpdaterManager.reload());
+                            writeBubbleConfig(true).then(() => BundleUpdaterManager?.reload?.());
                         },
                     }),
                 ),
