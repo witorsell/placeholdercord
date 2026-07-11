@@ -1,6 +1,12 @@
 # PlaceholderCord [![Discord](https://img.shields.io/discord/1427396621905432699?style=social&logo=discord&label=PlaceholderCord)](https://discord.placeholdercord.dev)
 
-Bundle based on Kettu, made just for fun
+A Discord Android client mod. This is a fork of [ShiggyCord](https://github.com/kmmiio99o/ShiggyCord), which is built on the Kettu / Bunny / Vendetta family of mobile mods.
+
+### Added on top of the base
+
+- **Native rounded chat bubbles.** Messages get a rounded bubble background and rounded avatars, drawn natively (this can't be faked from JS, since Discord renders chat in native code). The drawing lives in [PlaceholderXposed](https://github.com/witorsell/PlaceholderXposed)'s `BubbleModule`, ported from [rainXposed](https://github.com/ra1ncord/rainXposed). Bubbles are on by default, with bridge hooks to toggle and restyle them.
+
+Everything else is inherited from ShiggyCord/Kettu. Credit to those projects, and to rain for the bubble implementation.
 
 ## Installing
 
