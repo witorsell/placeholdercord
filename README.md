@@ -1,4 +1,4 @@
-# PlaceholderCord [![Discord](https://img.shields.io/discord/1427396621905432699?style=social&logo=discord&label=PlaceholderCord)](https://discord.placeholdercord.dev)
+# PlaceholderCord
 
 A Discord Android client mod. This is a fork of [ShiggyCord](https://github.com/kmmiio99o/ShiggyCord), which is built on the Kettu / Bunny / Vendetta family of mobile mods.
 
