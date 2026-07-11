@@ -64,7 +64,7 @@ export default function ErrorBoundaryScreen(props: {
           <Text variant="display-lg">Uh oh.</Text>
           <Text variant="text-md/normal">
             A crash occurred while rendering a component. This could be caused
-            by a plugin, ShiggyCord, or Discord itself.
+            by a plugin, PlaceholderCord, or Discord itself.
           </Text>
           <Text variant="text-sm/normal" color="text-muted">
             {debugInfo.os.name}; {debugInfo.discord.build} (
@@ -116,7 +116,7 @@ export default function ErrorBoundaryScreen(props: {
             onPress={() => {
               try {
                 console.log(
-                  "[ShiggyCord][ErrorBoundaryScreen] Retry Render clicked",
+                  "[PlaceholderCord][ErrorBoundaryScreen] Retry Render clicked",
                 );
               } catch {}
               props.rerender();

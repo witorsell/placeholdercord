@@ -1,5 +1,5 @@
 import { Strings } from "@core/i18n";
-import { shiggycordIcon } from "@core/ui/settings";
+import { placeholdercordIcon } from "@core/ui/settings";
 import Version from "@core/ui/settings/pages/General/Version";
 import { useProxy } from "@core/vendetta/storage";
 import { getDebugInfo } from "@lib/api/debug";
@@ -15,9 +15,9 @@ export default function About() {
 
   const coreVersions = [
     {
-      label: Strings.SHIGGYCORD,
+      label: Strings.PLACEHOLDERCORD,
       version: debugInfo.bunny.version,
-      icon: { uri: shiggycordIcon },
+      icon: { uri: placeholdercordIcon },
     },
     {
       label: "Discord",
@@ -91,13 +91,13 @@ export default function About() {
       >
         <View style={{ alignItems: "center", paddingVertical: 16 }}>
           <Text variant="heading-xl/bold" style={{ textAlign: "center" }}>
-            {Strings.SHIGGYCORD}
+            {Strings.PLACEHOLDERCORD}
           </Text>
           <Text
             variant="text-md/medium"
             style={{ textAlign: "center", marginTop: 4 }}
           >
-            Shiggy your discord client!
+            Placeholder your discord client!
           </Text>
         </View>
 

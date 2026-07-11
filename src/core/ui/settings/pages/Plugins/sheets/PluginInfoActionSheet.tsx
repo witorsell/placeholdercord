@@ -197,7 +197,7 @@ export default function PluginInfoActionSheet({
             disabled={!plugin.getPluginSettingsComponent()}
             icon={findAssetId("SettingsIcon")}
             onPress={() => {
-              navigation.push("SHIGGYCORD_CUSTOM_PAGE", {
+              navigation.push("PLACEHOLDERCORD_CUSTOM_PAGE", {
                 title: plugin.name,
                 render: plugin.getPluginSettingsComponent(),
               });

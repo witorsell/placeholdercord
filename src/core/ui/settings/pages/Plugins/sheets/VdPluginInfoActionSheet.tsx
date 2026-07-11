@@ -46,7 +46,7 @@ export default function PluginInfoActionSheet({
                 icon={findAssetId("SettingsIcon")}
                 onPress={() => {
                   hideSheet("PluginInfoActionSheet");
-                  navigation.push("SHIGGYCORD_CUSTOM_PAGE", {
+                  navigation.push("PLACEHOLDERCORD_CUSTOM_PAGE", {
                     title: plugin.name,
                     render: SettingsComponent,
                   });

@@ -1,9 +1,9 @@
 {
-  "name": "ShiggyCord",
+  "name": "PlaceholderCord",
   "private": true,
   "author": {
-    "name": "kmmiio99o",
-    "url": "https://github.com/kmmiio99o"
+    "name": "witorsell",
+    "url": "https://github.com/witorsell"
   },
   "scripts": {
     "build": "node scripts/build.mjs",

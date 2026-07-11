@@ -60,7 +60,7 @@ enum Sort {
 }
 
 const THEME_URL =
-  "https://raw.githubusercontent.com/kmmiio99o/theme-marketplace/refs/heads/main/themes.json";
+  "https://raw.githubusercontent.com/witorsell/theme-marketplace/refs/heads/main/themes.json";
 
 function BrowserThemeCard({
   theme,

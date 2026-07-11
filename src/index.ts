@@ -58,7 +58,7 @@ export default async () => {
   window.bunny = lib;
 
   logger.log(
-    "ShiggyCord: UI-critical initialization complete — deferring plugin & network work",
+    "PlaceholderCord: UI-critical initialization complete — deferring plugin & network work",
   );
 
   // Deferred work: run after interactions to avoid blocking initial paint and navigation.
@@ -71,7 +71,7 @@ export default async () => {
       .then((u) => lib.unload.push(u))
       .catch((e) => logger.log("Vendetta init failed:", e));
 
-    // Start ShiggyCord (Bunny) plugins now without forcing repository updates.
+    // Start PlaceholderCord (Bunny) plugins now without forcing repository updates.
     // Plugin repository fetching is deferred so the app can finish launching first.
     // Stagger plugin startup to reduce CPU/memory spikes: use smaller batches and a small interval.
     // This keeps the UI responsive while plugins initialize in the background.
@@ -126,5 +126,5 @@ export default async () => {
   }
 
   // Final ready log for basic UI availability.
-  logger.log("ShiggyCord is ready.");
+  logger.log("PlaceholderCord is ready.");
 };

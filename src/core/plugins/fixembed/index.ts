@@ -78,7 +78,7 @@ export default defineCorePlugin({
       name: "FixEmbed",
       description:
         "Improves social media embeds by using privacy-friendly alternative frontends.",
-      authors: [{ name: "ShiggyCord Team" }],
+      authors: [{ name: "PlaceholderCord Team" }],
     },
   },
 

@@ -119,7 +119,7 @@ const Actions = () => {
         icon={findAssetId("SettingsIcon")}
         disabled={!plugin.getPluginSettingsComponent()}
         onPress={() =>
-          navigation.push("SHIGGYCORD_CUSTOM_PAGE", {
+          navigation.push("PLACEHOLDERCORD_CUSTOM_PAGE", {
             title: plugin.name,
             render: plugin.getPluginSettingsComponent(),
           })

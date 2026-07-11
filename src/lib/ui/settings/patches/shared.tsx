@@ -36,7 +36,7 @@ export function wrapOnPress(
     }
 
     navigation ??= tabsNavigationRef.getRootNavigationRef();
-    navigation.navigate("SHIGGYCORD_CUSTOM_PAGE", {
+    navigation.navigate("PLACEHOLDERCORD_CUSTOM_PAGE", {
       ...screenOptions,
       render: () => <Component {...props} />,
     });
