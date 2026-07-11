@@ -35,6 +35,9 @@ export interface NativeApi {
     app: {
         reload(): Promise<void>;
     };
+    camera: {
+        setMedia(path: string | null): Promise<void>;
+    };
 }
 
 export function makeNative(invoke: NativeInvoke): NativeApi {
@@ -66,6 +69,9 @@ export function makeNative(invoke: NativeInvoke): NativeApi {
         },
         app: {
             reload: () => call("app.reload"),
+        },
+        camera: {
+            setMedia: path => call("camera.setMedia", path),
         },
     };
 }
