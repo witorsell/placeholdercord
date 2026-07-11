@@ -36,6 +36,7 @@ export const getCorePlugins = (): CorePluginRecord => ({
   "bunny.notrack": makeLazyPlugin(() => require("./notrack")),
   "bunny.fixembed": makeLazyPlugin(() => require("./fixembed")),
   "bunny.chatbubbles": makeLazyPlugin(() => require("./chatbubbles")),
+  "bunny.chatboxavatar": makeLazyPlugin(() => require("./chatboxavatar")),
 });
 
 /**
