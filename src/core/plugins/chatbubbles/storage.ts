@@ -15,7 +15,8 @@ declare module "@lib/api/settings" {
 }
 
 export const DEFAULTS: ChatBubblesConfig = {
-    avatarRadius: 12,
+    // avatarRadius is a percentage of the avatar size (0 = square, 50 = circle).
+    avatarRadius: 30,
     bubbleRadius: 40,
     bubbleColor: "",
 };

@@ -45,9 +45,9 @@ export default function ChatBubblesSettings() {
                 onChange={(v: string) => set({ avatarRadius: Number(v) })}
             >
                 <TableRadioRow value="0" label="Square" />
-                <TableRadioRow value="8" label="Slightly rounded" />
-                <TableRadioRow value="12" label="Rounded" />
-                <TableRadioRow value="24" label="Circle" />
+                <TableRadioRow value="15" label="Slightly rounded" />
+                <TableRadioRow value="30" label="Rounded" />
+                <TableRadioRow value="50" label="Circle" />
             </TableRadioGroup>
 
             <TableRadioGroup
