@@ -14,6 +14,22 @@ export interface BubbleState {
     bubbleColor: number;
 }
 
+export interface DeviceSpoofOptions {
+    device?: string;
+    model?: string;
+    brand?: string;
+    product?: string;
+    manufacturer?: string;
+    socName?: string;
+    ramSize?: string;
+    maxCpuFreq?: string;
+    /** The persistent per-install UUID Discord's backend actually uses for Android device identity. */
+    deviceVendorId?: string;
+}
+
+/** Currently spoofed values; a field is null when not overridden. */
+export type DeviceSpoofState = Required<{ [K in keyof DeviceSpoofOptions]: string | null }>;
+
 export interface NativeApi {
     /** Generic escape hatch: call any registered native method by name. */
     call(method: string, ...args: unknown[]): Promise<any>;
@@ -39,6 +55,12 @@ export interface NativeApi {
     camera: {
         /** Resolves to the path that was actually applied, or null if disabled. */
         setMedia(path: string | null): Promise<string | null>;
+    };
+    device: {
+        /** Resolves to the full spoof state after applying. Omitted fields are cleared. */
+        spoof(opts: DeviceSpoofOptions): Promise<DeviceSpoofState>;
+        resetSpoof(): Promise<DeviceSpoofState>;
+        getSpoofState(): Promise<DeviceSpoofState>;
     };
 }
 
@@ -74,6 +96,11 @@ export function makeNative(invoke: NativeInvoke): NativeApi {
         },
         camera: {
             setMedia: path => call("camera.setMedia", path),
+        },
+        device: {
+            spoof: opts => call("device.spoof", opts),
+            resetSpoof: () => call("device.resetSpoof"),
+            getSpoofState: () => call("device.getSpoofState"),
         },
     };
 }
