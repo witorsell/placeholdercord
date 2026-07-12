@@ -181,11 +181,32 @@ export const purgeStorage = async (store: string) => {
     }
 };
 
+// Every read/write to a MMKV-backed store awaits this migration first (see
+// createFileBackend below). Without a bound, a single hung native call here
+// (fileExists/getItem/readFile/writeFile) freezes that store, and anything
+// awaiting it (plugins, themes, per-plugin storage all use this backend),
+// forever, with no error and no way to notice why. Cap it so migration can
+// only ever delay a store, never hang it: on timeout we just skip migrating
+// this run rather than block reads/writes indefinitely.
+function withMigrationTimeout(promise: Promise<void>, store: string, ms = 8000): Promise<void> {
+    return new Promise(resolve => {
+        const timer = setTimeout(() => {
+            console.error(`${store}: MMKV migration timed out after ${ms}ms, skipping for this run`);
+            resolve();
+        }, ms);
+
+        promise.then(
+            () => { clearTimeout(timer); resolve(); },
+            e => { clearTimeout(timer); console.error(`${store}: MMKV migration failed`, e); resolve(); },
+        );
+    });
+}
+
 export const createMMKVBackend = (store: string, defaultData = {}) => {
     const mmkvPath = getMMKVPath(store);
     const defaultStr = JSON.stringify(defaultData);
 
-    return createFileBackend(mmkvPath, defaultData, (async () => {
+    const migrate = (async () => {
         const path = `${NativeFileModule.getConstants().DocumentsDirPath}/${mmkvPath}`;
         if (await NativeFileModule.fileExists(path)) return;
 
@@ -214,7 +235,9 @@ export const createMMKVBackend = (store: string, defaultData = {}) => {
             NativeCacheModule.removeItem(store);
             console.log(`Successfully migrated ${store} store from MMKV storage to fs`);
         }
-    })());
+    })();
+
+    return createFileBackend(mmkvPath, defaultData, withMigrationTimeout(migrate, store));
 };
 
 // Lightweight in-memory backend to accelerate startup and avoid blocking IO
