@@ -50,7 +50,7 @@ export default async () => {
   )
     .then((u) => u.forEach((f) => f && lib.unload.push(f)))
     .catch((e) => {
-      // Log but don't abort — critical inits failing should be visible in logs.
+      // Log but don't abort, critical inits failing should be visible in logs.
       console.warn("Critical initialization error:", e);
     });
 
@@ -58,7 +58,7 @@ export default async () => {
   window.bunny = lib;
 
   logger.log(
-    "PlaceholderCord: UI-critical initialization complete — deferring plugin & network work",
+    "PlaceholderCord: UI-critical initialization complete, deferring plugin & network work",
   );
 
   // Deferred work: run after interactions to avoid blocking initial paint and navigation.
@@ -66,13 +66,21 @@ export default async () => {
     const { VdPluginManager } = await import("@core/vendetta/plugins");
     const { initPlugins, updatePlugins } = await import("@lib/addons/plugins");
 
-    // Initialize Vendetta plugins (may start many plugins) — do not block UI.
+    // Initialize Vendetta plugins (may start many plugins), do not block UI.
     VdPluginManager.initPlugins()
       .then((u) => lib.unload.push(u))
       .catch((e) => logger.log("Vendetta init failed:", e));
 
-    // Start PlaceholderCord (Bunny) plugins now without forcing repository updates.
-    // Plugin repository fetching is deferred so the app can finish launching first.
+    // Register plugin manifests (core AND external/repo plugins) before starting
+    // anything. initPlugins() only starts plugins it finds in the registry, so if
+    // this isn't awaited first, externally-installed plugins (Bubble Chat, Virtual
+    // Camera, anything from a repo) are invisible to the startup sweep below and
+    // never get started at all, since nothing else re-registers them later.
+    await updatePlugins().catch((e) =>
+      logger.log("updatePlugins failed:", e),
+    );
+
+    // Start PlaceholderCord (Bunny) plugins now that the registry is populated.
     // Stagger plugin startup to reduce CPU/memory spikes: use smaller batches and a small interval.
     // This keeps the UI responsive while plugins initialize in the background.
     initPlugins({ staggerInterval: 500, batchSize: 2 });
@@ -99,19 +107,16 @@ export default async () => {
     // Update fonts in background
     updateFonts().catch((e) => logger.log("updateFonts failed:", e));
 
-    // Schedule plugin repository update after a delay (5 minutes) so update work
-    // does not impact initial launch performance.
+    // Periodic re-check for plugin/repo updates. The initial registration already
+    // happened above before initPlugins(), this is just a later refresh.
     setTimeout(
       () => {
         updatePlugins().catch((e) =>
-          logger.log("updatePlugins failed (deferred 5min):", e),
+          logger.log("updatePlugins failed (periodic refresh):", e),
         );
       },
       5 * 60 * 1000,
     );
-
-    // Note: we intentionally moved the call to `updatePlugins()` above so core
-    // plugins are registered prior to calling `initPlugins()`.
   };
 
   // Preferred: wait until interactions finish (animations / navigation).
