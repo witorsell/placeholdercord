@@ -12,6 +12,10 @@ A Discord Android client mod. This is a fork of [ShiggyCord](https://github.com/
 
 Everything else is inherited from ShiggyCord/Kettu. Credit to those projects, and to rain for the bubble implementation.
 
+## Plugins
+
+Check out [placeholdercord-plugins](https://github.com/witorsell/placeholdercord-plugins) for third-party plugins built on the Native Bridge, including Bubble Chat (configurable bubble/avatar styling) and Virtual Camera. See the [native bridge docs](https://witorsell.github.io/placeholdercord-docs/) if you want to write your own.
+
 ## Installing
 
 ### Android
