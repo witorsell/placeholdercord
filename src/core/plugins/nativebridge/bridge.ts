@@ -20,7 +20,8 @@ export interface NativeApi {
     /** Names of every method the native side currently exposes. */
     modules(): Promise<string[]>;
     bubbles: {
-        setEnabled(enabled: boolean): Promise<BubbleState>;
+        /** Resolves to the enabled state that was actually applied. */
+        setEnabled(enabled: boolean): Promise<boolean>;
         configure(opts: {
             avatarRadius?: number;
             bubbleRadius?: number;
@@ -36,7 +37,8 @@ export interface NativeApi {
         reload(): Promise<void>;
     };
     camera: {
-        setMedia(path: string | null): Promise<void>;
+        /** Resolves to the path that was actually applied, or null if disabled. */
+        setMedia(path: string | null): Promise<string | null>;
     };
 }
 
