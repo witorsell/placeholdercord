@@ -37,6 +37,17 @@ export function validateFont(font: FontDefinition) {
     if (font.name in fonts) throw new Error(`There is already a font named '${font.name}' installed`);
 }
 
+async function downloadMissingFontFiles(fontDefJson: FontDefinition) {
+    const errors = await Promise.allSettled(Object.entries(fontDefJson.main).map(async ([font, url]) => {
+        let ext = url.split(".").pop();
+        if (ext !== "ttf" && ext !== "otf") ext = "ttf";
+        const path = `downloads/fonts/${fontDefJson.name}/${font}.${ext}`;
+        if (!await fileExists(path)) await downloadFile(url, path);
+    })).then(it => it.map(it => it.status === 'fulfilled' ? undefined : it.reason));
+
+    if (errors.some(it => it)) throw errors;
+}
+
 export async function saveFont(data: string | FontDefinition, selected = false) {
     let fontDefJson: FontDefinition;
 
@@ -52,14 +63,7 @@ export async function saveFont(data: string | FontDefinition, selected = false) 
 
     validateFont(fontDefJson);
 
-    const errors = await Promise.allSettled(Object.entries(fontDefJson.main).map(async ([font, url]) => {
-        let ext = url.split(".").pop();
-        if (ext !== "ttf" && ext !== "otf") ext = "ttf";
-        const path = `downloads/fonts/${fontDefJson.name}/${font}.${ext}`;
-        if (!await fileExists(path)) await downloadFile(url, path);
-    })).then(it => it.map(it => it.status === 'fulfilled' ? undefined : it.reason));
-
-    if (errors.some(it => it)) throw errors
+    await downloadMissingFontFiles(fontDefJson);
 
     fonts[fontDefJson.name] = fontDefJson;
 
@@ -111,8 +115,9 @@ export async function removeFont(name: string) {
 export async function updateFonts() {
     await awaitStorage(fonts);
     Promise.allSettled(
-        Object.keys(fonts).map(
-            name => saveFont(fonts[name], fonts.__selected === name)
-        )
+        Object.keys(fonts).map(async name => {
+            await downloadMissingFontFiles(fonts[name]);
+            if (fonts.__selected === name) await writeFont(fonts[name]);
+        })
     );
 }
