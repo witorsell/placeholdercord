@@ -66,11 +66,6 @@ export default async () => {
     const { VdPluginManager } = await import("@core/vendetta/plugins");
     const { initPlugins, updatePlugins } = await import("@lib/addons/plugins");
 
-    // Initialize Vendetta plugins (may start many plugins), do not block UI.
-    VdPluginManager.initPlugins()
-      .then((u) => lib.unload.push(u))
-      .catch((e) => logger.log("Vendetta init failed:", e));
-
     // Register plugin manifests (core AND external/repo plugins) before starting
     // anything. initPlugins() only starts plugins it finds in the registry, so if
     // this isn't awaited first, externally-installed plugins (Bubble Chat, Virtual
@@ -80,10 +75,23 @@ export default async () => {
       logger.log("updatePlugins failed:", e),
     );
 
-    // Start PlaceholderCord (Bunny) plugins now that the registry is populated.
-    // Stagger plugin startup to reduce CPU/memory spikes: use smaller batches and a small interval.
-    // This keeps the UI responsive while plugins initialize in the background.
-    initPlugins({ staggerInterval: 500, batchSize: 2 });
+    // Start PlaceholderCord (Bunny) plugins, including the Native Bridge core
+    // plugin, and wait for the whole sweep to settle before touching Vendetta
+    // plugins below. Stagger plugin startup to reduce CPU/memory spikes: use
+    // smaller batches and a small interval. This keeps the UI responsive while
+    // plugins initialize in the background.
+    await initPlugins({ staggerInterval: 500, batchSize: 2 });
+
+    // Vendetta plugins (Bubble Chat, Virtual Camera, anything using onLoad/
+    // onUnload) start only now, after the Bunny sweep above has fully settled.
+    // Vendetta's own plugin list comes straight from local MMKV storage with no
+    // network wait, so if this ran concurrently with the Bunny sweep instead of
+    // after it, Vendetta plugins would reliably win the race and run onLoad
+    // before Native Bridge's start() has set window.placeholder, exactly the
+    // "Native Bridge needs to be enabled" false alarm this fixes.
+    VdPluginManager.initPlugins()
+      .then((u) => lib.unload.push(u))
+      .catch((e) => logger.log("Vendetta init failed:", e));
 
     // Attempt a lightweight recovery toggle if some core plugins failed to start.
     try {
