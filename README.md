@@ -4,11 +4,11 @@ A Discord Android client mod. This is a fork of [ShiggyCord](https://github.com/
 
 ### Added on top of the base
 
-- **Native rounded chat bubbles.** Messages get a rounded bubble background and rounded avatars, drawn natively (this can't be faked from JS, since Discord renders chat in native code). The drawing lives in [PlaceholderXposed](https://github.com/witorsell/PlaceholderXposed)'s `BubbleModule`, ported from [rainXposed](https://github.com/ra1ncord/rainXposed). Bubbles are on by default; toggle and restyle them with the [Bubble Chat](https://github.com/witorsell/placeholdercord-plugins/blob/main/plugins/BubbleChat/index.ts) plugin over the Native Bridge.
+- **Native rounded chat bubbles.** Messages get a rounded bubble background and rounded avatars, drawn natively (this can't be faked from JS, since Discord renders chat in native code). The drawing lives in [PlaceholderXposed](https://github.com/witorsell/PlaceholderXposed)'s `BubbleModule`, ported from [rainXposed](https://github.com/ra1ncord/rainXposed). Off by default; turn them on and restyle with the [Bubble Chat](https://github.com/witorsell/placeholdercord-plugins/blob/main/plugins/BubbleChat/index.ts) plugin over the Native Bridge.
 
 - **Native Bridge.** A built-in core plugin (`bunny.nativebridge`) that exposes `window.placeholder.native` to JavaScript plugins, allowing them to invoke native Android methods via Xposed. This powers Native Bubbles and Virtual Camera.
 
-- **Virtual Camera.** A native capturer override module inside [PlaceholderXposed](https://github.com/witorsell/PlaceholderXposed) that lets you spoof your video call stream with any local image/video/gif via the Native Bridge.
+- **Virtual Camera.** A native capturer override module inside [PlaceholderXposed](https://github.com/witorsell/PlaceholderXposed) that lets you spoof your video call stream with a local static image via the Native Bridge. Video and GIF paths don't actually animate, only a still image works.
 
 Everything else is inherited from ShiggyCord/Kettu. Credit to those projects, and to rain for the bubble implementation.
 
