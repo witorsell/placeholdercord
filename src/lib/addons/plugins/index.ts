@@ -752,6 +752,51 @@ export async function updatePlugins() {
       }),
     );
   }
+
+  const enabledIds = [...registeredPlugins.keys()].filter(
+    (id) => isPluginEnabled(id) && !pluginInstances.has(id),
+  );
+  await Promise.allSettled(
+    enabledIds.map(async (id) => {
+      try {
+        await startPlugin(id).catch((e) => {
+          console.error(`Failed to start plugin ${id}:`, e);
+        });
+      } catch (error) {
+        console.error(`Unexpected error while starting plugin ${id}:`, error);
+      }
+    }),
+  );
+}
+
+/**
+ * Register all installed plugins from local storage manifests without any
+ * network fetch. This lets initPlugins() start plugins immediately using
+ * previously-cached scripts, keeping startup snappy.
+ *
+ * Safe to call multiple times — skips already-registered plugins.
+ */
+export async function registerInstalledPlugins() {
+  await awaitStorage(pluginRepositories, pluginSettings);
+
+  const ids = Object.keys(pluginSettings ?? {});
+  if (ids.length === 0) return;
+
+  // Load all manifest files from local storage in parallel.
+  const results = await Promise.allSettled(
+    ids.map(async (id) => {
+      if (registeredPlugins.has(id) || isCorePlugin(id)) return;
+      const loaded = await preloadStorageIfExists(`plugins/manifests/${id}.json`);
+      if (loaded) {
+        const manifest = getPreloadedStorage<t.BunnyPluginManifest>(
+          `plugins/manifests/${id}.json`,
+        );
+        if (manifest) {
+          registeredPlugins.set(id, manifest);
+        }
+      }
+    }),
+  );
 }
 
 /**
@@ -784,6 +829,7 @@ export async function initPlugins(
   }
 
   await awaitStorage(pluginRepositories, pluginSettings);
+  await registerInstalledPlugins();
 
   // Collect enabled plugin ids
   const enabledIds = [...registeredPlugins.keys()].filter((id) =>

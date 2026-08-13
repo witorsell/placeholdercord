@@ -19,6 +19,9 @@ export default () =>
     ],
     execute([ephemeral], ctx) {
       const info = getDebugInfo();
+
+      const codename = info.device.codename ? `(${info.device.codename})` : "";
+
       const content = [
         "**PlaceholderCord Debug Info**",
         `> PlaceholderCord: ${info.bunny.version} (${info.bunny.loader.name} ${info.bunny.loader.version})`,
@@ -26,7 +29,7 @@ export default () =>
         `> React: ${info.react.version} (RN ${info.react.nativeVersion})`,
         `> Hermes: ${info.hermes.version} (bcv${info.hermes.bytecodeVersion})`,
         `> System: ${info.os.name} ${info.os.version} ${info.os.sdk ? `(SDK ${info.os.sdk})` : ""}`.trimEnd(),
-        `> Device: ${info.device.model}`,
+        `> Device: ${info.device.model} ${codename}`.trimEnd(),
       ].join("\n");
 
         if (ephemeral?.value) {
