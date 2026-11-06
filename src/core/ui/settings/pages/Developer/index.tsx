@@ -38,6 +38,7 @@ import { createStyles, TextStyleSheet } from "@ui/styles";
 import { NativeModules } from "react-native";
 import { ScrollView } from "react-native";
 import { showToast } from "@ui/toasts";
+import { profileJsThread } from "./profiler";
 import { useState, useEffect } from "react";
 
 const { hideActionSheet } = lazyDestructure(() =>
@@ -238,6 +239,12 @@ export default function Developer() {
           )}
 
           <TableRowGroup title="Inspection & Testing">
+            <TableRow
+              label="Profile the JS thread (10s)"
+              subLabel="Scroll and tap around while it runs. Copies the result."
+              icon={<TableRow.Icon source={findAssetId("LinkIcon")} />}
+              onPress={() => profileJsThread(10)}
+            />
             <TableSwitchRow
               label="Skip render hooks (lag test)"
               subLabel="Turns off the JSX, Flux and log hooks. Restarts the app."
