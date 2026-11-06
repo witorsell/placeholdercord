@@ -22,11 +22,17 @@ export const showToast = (content: string, asset?: number) => {
             console.warn("[PlaceholderCord] Toast module not resolved; skipping toast:", content);
             return;
         }
-        toastModule.open({
-            key: `vd-toast-${safeUuid4()}`,
-            content: content,
-            icon: asset,
-        });
+        const key = `vd-toast-${safeUuid4()}`;
+
+        // Discord 352 changed open() to (key, toast) and the toast entry to { text, icon, ... }.
+        // Passing the old single object leaves the entry without a toast, and the container then
+        // throws reading toast.position and takes the whole screen down. The new icon is a
+        // component rather than an asset id, so it is left out there.
+        if (toastModule.open.length >= 2) {
+            toastModule.open(key, { text: content });
+        } else {
+            toastModule.open({ key, content, icon: asset });
+        }
     } catch (e) {
         console.warn("[PlaceholderCord] Toast failed:", content, e);
     }
