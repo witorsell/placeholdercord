@@ -44,6 +44,14 @@ export async function createVdPluginObject(plugin: VendettaPlugin) {
 }
 
 export const initVendettaObject = (): any => {
+  // Vendetta-era plugins sometimes call a bare `React`, which only exists if the host defines it.
+  if (typeof (globalThis as any).React === "undefined") {
+    Object.defineProperty(globalThis, "React", {
+      get: () => common.React,
+      configurable: true,
+    });
+  }
+
   // pitfall: this assumes the returning module(s) are the same within the same location
   // find(m => m.render?.name === "ActionSheet") - would work fine
   // ["trackThis", "trackThat"].forEach(p => find(m => m[p])) - would not
@@ -107,7 +115,28 @@ export const initVendettaObject = (): any => {
           return metro.findByName("create", false).default;
         }
 
-        return metro.findByName(name, defaultExp ?? true);
+        const found = metro.findByName(name, defaultExp ?? true);
+
+        // Compat for plugins written against older Discord builds (Picture Links is one).
+        // 352 moved openMediaModal into its own module, so the MediaModal module no longer has it.
+        if (name === "MediaModal" && defaultExp === false && found && typeof found.openMediaModal !== "function") {
+          const openMediaModal = metro.findByProps("openMediaModal")?.openMediaModal;
+          if (typeof openMediaModal === "function") {
+            return Object.create(found, { openMediaModal: { value: openMediaModal } });
+          }
+        }
+
+        // GuildIcon was a class component that plugins patch through its prototype. It is gone in
+        // 352, so hand back an inert stand-in; patching it is harmless and the plugin still loads.
+        if (name === "GuildIcon" && !found) {
+          return class GuildIconCompat {
+            render() {
+              return null;
+            }
+          };
+        }
+
+        return found;
       },
       findByNameAll: (name: string, defaultExp: boolean = true) =>
         metro.findByNameAll(name, defaultExp),

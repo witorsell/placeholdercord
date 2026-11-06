@@ -3,6 +3,7 @@ import { findAssetId } from "@lib/api/assets";
 import { settings } from "@lib/api/settings";
 import { dismissAlert, openAlert } from "@lib/ui/alerts";
 import { showSheet } from "@lib/ui/sheets";
+import { showToast } from "@ui/toasts";
 import isValidHttpUrl from "@lib/utils/isValidHttpUrl";
 import { lazyDestructure, proxyLazy } from "@lib/utils/lazy";
 import { findByProps } from "@metro";
@@ -68,31 +69,62 @@ function InputAlert(props: {
   const [value, setValue] = React.useState("");
   const [error, setError] = React.useState("");
   const [isFetching, setIsFetching] = React.useState(false);
-  const [validUrl, setValidUrl] = React.useState(false);
+  const [progress, setProgress] = React.useState("");
 
-  // Check URL validity whenever value changes
-  React.useEffect(() => {
-    setValidUrl(isValidHttpUrl(value));
-  }, [value]);
+  // Any number of links, separated by spaces, commas or new lines.
+  const urls = React.useMemo(
+    () => Array.from(new Set(value.split(/[\s,]+/).filter(Boolean))),
+    [value],
+  );
 
-  function onConfirmWrapper() {
-    if (!value || !isValidHttpUrl(value)) return;
+  async function onConfirmWrapper() {
+    if (!urls.length) return;
+
+    const invalid = urls.filter((u) => !isValidHttpUrl(u));
+    if (invalid.length) {
+      setError(
+        invalid.length === 1
+          ? `Not a valid URL: ${invalid[0]}`
+          : `${invalid.length} entries are not valid URLs, first: ${invalid[0]}`,
+      );
+      return;
+    }
 
     setIsFetching(true);
+    const failed: { url: string; message: string }[] = [];
+    let installed = 0;
 
-    props
-      .fetchFn(value)
-      .then(() => dismissAlert("AddonInputAlert"))
-      .catch((e: unknown) =>
-        e instanceof Error ? setError(e.message) : String(e),
-      )
-      .finally(() => setIsFetching(false));
+    for (let i = 0; i < urls.length; i++) {
+      setProgress(urls.length > 1 ? `${i + 1}/${urls.length}` : "");
+      try {
+        await props.fetchFn(urls[i]);
+        installed++;
+      } catch (e) {
+        failed.push({ url: urls[i], message: e instanceof Error ? e.message : String(e) });
+      }
+    }
+
+    setIsFetching(false);
+    setProgress("");
+
+    if (!failed.length) {
+      if (urls.length > 1) showToast(`Installed ${installed} items`);
+      dismissAlert("AddonInputAlert");
+      return;
+    }
+
+    // Keep only the ones that failed in the box so retrying doesn't reinstall the rest.
+    setValue(failed.map((f) => f.url).join("\n"));
+    setError(
+      `${installed} installed, ${failed.length} failed: ` +
+        failed.map((f) => `${f.url.split("/").filter(Boolean).pop()} (${f.message})`).join("; "),
+    );
   }
 
   return (
     <AlertModal
       title={props.label}
-      content="Type in the source URL you want to install from:"
+      content="Paste one or more source URLs (separated by spaces or new lines):"
       extraContent={
         <Stack style={{ marginTop: -8, gap: 12 }}>
           <View
@@ -157,7 +189,7 @@ function InputAlert(props: {
           />
           <Button
             loading={isFetching}
-            text={isFetching ? "Installing..." : "Install"}
+            text={isFetching ? `Installing${progress ? " " + progress : ""}...` : urls.length > 1 ? `Install ${urls.length}` : "Install"}
             variant="primary"
             onPress={onConfirmWrapper}
             icon={!isFetching ? findAssetId("DownloadIcon") : undefined}
