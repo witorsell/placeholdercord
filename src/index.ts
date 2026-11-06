@@ -92,25 +92,6 @@ export default async () => {
       .then((u) => lib.unload.push(u))
       .catch((e) => logger.log("Vendetta init failed:", e));
 
-    // Attempt a lightweight recovery toggle if some core plugins failed to start.
-    try {
-      // Dynamically import the helper (if present) but suppress verbose errors.
-      const mod = await import("@core/debug/toggleCorePlugins").catch(
-        () => null,
-      );
-      if (mod?.default) {
-        // Run helper with minimal noise; ignore failures.
-        mod.default({ offDuration: 1500 }).catch(() => {});
-      }
-
-      // Try to remove the helper source file (best-effort, ignore failures).
-      await import("@lib/api/native/fs")
-        .then((fs) => fs.removeFile("src/core/debug/toggleCorePlugins.ts"))
-        .catch(() => {});
-    } catch {
-      // suppressed
-    }
-
     // Update fonts in background
     updateFonts().catch((e) => logger.log("updateFonts failed:", e));
 
