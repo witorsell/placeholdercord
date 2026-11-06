@@ -30,6 +30,12 @@ export default defineCorePlugin({
     start() {
         window.placeholder = { native };
         logger.log("[NativeBridge] window.placeholder.native ready");
+
+        // One call at startup so a dead bridge shows up in the logs instead of at the first plugin.
+        native.call("info").then(
+            (info) => console.log("[NativeBridge] native side answered:", JSON.stringify(info)),
+            (e) => console.warn("[NativeBridge] native side did not answer:", String(e)),
+        );
     },
 
     stop() {
