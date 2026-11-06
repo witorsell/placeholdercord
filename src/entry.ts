@@ -7,11 +7,8 @@ globalThis.window = globalThis;
 
 async function initializePlaceholderCord() {
   try {
-    // Make 'freeze' and 'seal' do nothing
-    Object.freeze = Object.seal = Object;
-
     await require("@metro/internals/caches").initMetroCache();
-    await require(".").default();
+    require(".").default();
   } catch (e) {
     const { ClientInfoManager } = require("@lib/api/native/modules");
     const stack = e instanceof Error ? e.stack : undefined;
