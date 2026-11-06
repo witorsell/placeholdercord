@@ -13,6 +13,8 @@ export interface Settings {
         currentThemeId?: string;
     };
     enableEvalCommand?: boolean;
+    /** Lag test: skip the JSX, Flux and log hooks on the next start. */
+    perfDisableHooks?: boolean;
 }
 
 export interface LoaderConfig {

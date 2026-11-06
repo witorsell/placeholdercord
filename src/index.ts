@@ -10,6 +10,8 @@ import { patchLogHook } from "@lib/api/debug";
 import { injectFluxInterceptor } from "@lib/api/flux";
 import { patchJsx } from "@lib/api/react/jsx";
 import { logger } from "@lib/utils/logger";
+import { settings } from "@lib/api/settings";
+import { awaitStorage } from "@lib/api/storage";
 import { patchSettings } from "@ui/settings";
 import { InteractionManager } from "react-native";
 import { getDebugInfo, initDebugger } from "@lib/api/debug";
@@ -22,13 +24,19 @@ import { timings } from "@lib/utils/timings";
  */
 export default async () => {
   // Wrap critical initializers as named functions so we can instrument each.
+  // Lag test switch from the Developer page: runs without the hooks that touch every render
+  // and every Flux event, so we can tell whether they are what makes the UI feel slow.
+  await awaitStorage(settings).catch(() => {});
+  const skipHooks = settings.perfDisableHooks === true;
+  if (skipHooks) console.log("[PlaceholderCord] perfDisableHooks on: JSX, Flux and log hooks skipped");
+
   const criticalInitFns: Array<[string, () => Promise<any>]> = [
     ["initThemes", () => initThemes()],
-    ["injectFluxInterceptor", () => injectFluxInterceptor()],
+    ["injectFluxInterceptor", () => (skipHooks ? undefined : injectFluxInterceptor())],
     ["patchSettings", () => patchSettings()],
-    ["patchLogHook", () => patchLogHook()],
+    ["patchLogHook", () => (skipHooks ? undefined : patchLogHook())],
     ["patchCommands", () => patchCommands()],
-    ["patchJsx", () => patchJsx()],
+    ["patchJsx", () => (skipHooks ? undefined : patchJsx())],
     ["patchErrorBoundary", () => patchErrorBoundary()],
     ["initVendettaObject", () => initVendettaObject()],
     ["initFetchI18nStrings", () => initFetchI18nStrings()],

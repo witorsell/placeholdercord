@@ -238,6 +238,16 @@ export default function Developer() {
           )}
 
           <TableRowGroup title="Inspection & Testing">
+            <TableSwitchRow
+              label="Skip render hooks (lag test)"
+              subLabel="Turns off the JSX, Flux and log hooks. Restarts the app."
+              icon={<TableRow.Icon source={findAssetId("LinkIcon")} />}
+              value={settings.perfDisableHooks === true}
+              onValueChange={(v: boolean) => {
+                settings.perfDisableHooks = v;
+                setTimeout(() => NativeModules.BundleUpdaterManager.reload(), 400);
+              }}
+            />
             <TableRow
               arrow
               label={Strings.ASSET_BROWSER}
@@ -296,7 +306,7 @@ export default function Developer() {
               arrow
               label={Strings.ERROR_BOUNDARY_TOOLS_LABEL}
               subLabel="Test error boundaries and crash handling"
-              icon={<TableRow.Icon source={findAssetId("ic_warning_24px")} />}
+              icon={<TableRow.Icon source={findAssetId("LinkIcon")} />}
               onPress={() =>
                 showSimpleActionSheet({
                   key: "ErrorBoundaryTools",
@@ -305,7 +315,7 @@ export default function Developer() {
                     icon: (
                       <TableRow.Icon
                         style={{ marginRight: 8 }}
-                        source={findAssetId("ic_warning_24px")}
+                        source={findAssetId("LinkIcon")}
                       />
                     ),
                   },
