@@ -1,24 +1,14 @@
 import { defineCorePlugin } from "..";
-import { after } from "@lib/api/patcher";
+import { deleteJsxCreate, onJsxCreate } from "@lib/api/react/jsx";
 import { logger } from "@lib/utils/logger";
-import { factories, findByNameLazy, findByProps, findByPropsLazy, findByStoreName, findExports } from "@metro";
+import { findByNameLazy, findByProps, findByPropsLazy, findByStoreName } from "@metro";
 import { React, ReactNative } from "@metro/common";
 
 import ChatboxAvatarSettings from "./settings";
 import { getChatboxAvatarConfig } from "./storage";
 
-// This stack's byTypeName matches `type.name` (minified in Discord); rain relies on
-// `type.displayName`, so build that finder explicitly.
-const byTypeDisplayName = factories.createFilterDefinition<[string]>(
-    ([name], m) => m?.type?.displayName === name,
-    name => `chatboxavatar.byTypeDisplayName(${name})`,
-);
-
 const { Pressable, Animated, View } = ReactNative;
 const avatarCollapse = new Animated.Value(0);
-
-let hasText = false;
-let sendBtnRef: { setHasText?: (v: boolean) => void } | undefined;
 
 const Flux = findByProps("useStateFromStores");
 const Avatar = findByPropsLazy("default", "AvatarSizes", "getStatusSize")?.default;
@@ -26,23 +16,28 @@ const UserStore = findByStoreName("UserStore");
 const SelectedChannelStore = findByStoreName("SelectedChannelStore");
 const ChannelStore = findByStoreName("ChannelStore");
 const SelfPresenceStore = findByStoreName("SelfPresenceStore");
+const DraftStore = findByStoreName("DraftStore");
 const showUserProfileActionSheet = findByNameLazy("showUserProfileActionSheet");
 const showYouAccountActionSheetByProp = findByPropsLazy("showYouAccountActionSheet");
 
 function AvatarAction() {
-    const [textState, setTextState] = React.useState(false);
     const config = getChatboxAvatarConfig();
     const self = Flux?.useStateFromStores?.([UserStore], () => UserStore?.getCurrentUser?.());
     const status = Flux?.useStateFromStores?.([SelfPresenceStore], () => SelfPresenceStore?.getStatus?.());
     const channelId = Flux?.useStateFromStores?.([SelectedChannelStore], () => SelectedChannelStore?.getCurrentlySelectedChannelId?.());
     const channel = Flux?.useStateFromStores?.([ChannelStore], () => ChannelStore?.getChannel?.(channelId), [channelId]);
+    // The draft store holds what is typed in the box for the open channel; used to collapse the avatar.
+    const textState = Boolean(
+        Flux?.useStateFromStores?.([DraftStore], () => {
+            try {
+                return DraftStore?.getDraft?.(channelId, 0);
+            } catch {
+                return "";
+            }
+        }, [channelId]),
+    );
 
     const animated = React.useRef(avatarCollapse).current;
-
-    React.useEffect(() => {
-        const interval = setInterval(() => setTextState(hasText), 100);
-        return () => clearInterval(interval);
-    }, []);
 
     React.useEffect(() => {
         const shouldCollapse = config.collapseWhileTyping && textState;
@@ -98,9 +93,7 @@ function AvatarAction() {
     );
 }
 
-let ChatInputActions: any;
-let ChatInputSendButton: any;
-const unpatches: (() => void)[] = [];
+let removeActionsHook: (() => void) | undefined;
 
 export default defineCorePlugin({
     manifest: {
@@ -119,43 +112,22 @@ export default defineCorePlugin({
     SettingsComponent: ChatboxAvatarSettings,
 
     start() {
-        ChatInputActions ??= findExports(byTypeDisplayName("ChatInputActions"));
-        ChatInputSendButton ??= findExports(byTypeDisplayName("ChatInputSendButton"));
-        if (!ChatInputActions?.type || !ChatInputSendButton?.type) {
-            logger.error("[ChatboxAvatar] could not find ChatInputActions/ChatInputSendButton");
-            return;
-        }
-
-        unpatches.push(after("render", ChatInputActions.type, (_args, ret) => {
-            return React.createElement(
+        // ChatInputActions is memo(fn) on 352, so wrap its element in a row with our avatar.
+        const cb = (_Component: any, ret: any) =>
+            React.createElement(
                 View,
                 { style: { flexDirection: "row", alignItems: "center" } },
                 ret,
                 React.createElement(AvatarAction),
             );
-        }));
 
-        unpatches.push(after("render", ChatInputSendButton.type, (args) => {
-            setImmediate(() => setImmediate(() => {
-                if (args?.[1]?.current) {
-                    sendBtnRef = args[1].current;
-                    const orig = sendBtnRef?.setHasText;
-                    unpatches.push(() => { if (sendBtnRef && orig) sendBtnRef.setHasText = orig; });
-                    if (sendBtnRef) {
-                        sendBtnRef.setHasText = (v: boolean) => {
-                            hasText = v;
-                            if (orig) return orig.call(sendBtnRef, v);
-                        };
-                    }
-                }
-            }));
-        }));
-
+        onJsxCreate("ChatInputActions", cb);
+        removeActionsHook = () => deleteJsxCreate("ChatInputActions", cb);
         logger.log("[ChatboxAvatar] enabled");
     },
 
     stop() {
-        for (const u of unpatches) u?.();
-        unpatches.length = 0;
+        removeActionsHook?.();
+        removeActionsHook = undefined;
     },
 });

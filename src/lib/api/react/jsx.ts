@@ -29,9 +29,18 @@ export function patchJsx() {
             return ret
         }
 
-        // The check could be more complex, but this is fine for now to avoid overhead
-        if (typeof Component === "function" && callbacks.has(Component.name)) {
-            const cbs = callbacks.get(Component.name)!;
+        // Function components are matched by name. React.memo components are objects, so match
+        // those by the displayName of the function they wrap (Discord 352 exports many components
+        // as memo(fn) with no forwardRef, so there is no .render to patch).
+        const name =
+            typeof Component === "function"
+                ? Component.name
+                : Component && typeof Component === "object"
+                  ? Component.type?.displayName ?? Component.displayName
+                  : undefined;
+
+        if (name && callbacks.has(name)) {
+            const cbs = callbacks.get(name)!;
             for (const cb of cbs) {
                 const _ret = cb(Component, ret);
                 if (_ret !== undefined) ret = _ret;
