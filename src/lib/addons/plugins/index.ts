@@ -721,15 +721,20 @@ export async function updatePlugins() {
   // Register core plugins
   const corePlugins = getCorePlugins();
   for (const id in corePlugins) {
-    const { default: instance, preenabled } = corePlugins[id];
+    // One broken core plugin shouldn't keep the others out of the list.
+    try {
+      const { default: instance, preenabled } = corePlugins[id];
 
-    // Core plugins are always installed
-    pluginSettings[id] ??= {
-      enabled: preenabled ?? true,
-    };
+      // Core plugins are always installed
+      pluginSettings[id] ??= {
+        enabled: preenabled ?? true,
+      };
 
-    registeredPlugins.set(id, instance.manifest);
-    corePluginInstances.set(id, instance);
+      registeredPlugins.set(id, instance.manifest);
+      corePluginInstances.set(id, instance);
+    } catch (e) {
+      console.error(`[PlaceholderCord] failed to register core plugin ${id}:`, e);
+    }
   }
 
   // Always ensure official repository metadata is at least attempted to be fetched,

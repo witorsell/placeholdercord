@@ -58,6 +58,7 @@ export default async () => {
 
   // Deferred work: run after interactions to avoid blocking initial paint and navigation.
   const runDeferred = async () => {
+    console.log("[PlaceholderCord] deferred init starting");
     const { VdPluginManager } = await import("@core/vendetta/plugins");
     const { initPlugins, updatePlugins } = await import("@lib/addons/plugins");
 
@@ -66,9 +67,11 @@ export default async () => {
     // this isn't awaited first, externally-installed plugins (Bubble Chat, Virtual
     // Camera, anything from a repo) are invisible to the startup sweep below and
     // never get started at all, since nothing else re-registers them later.
-    await updatePlugins().catch((e) =>
-      logger.log("updatePlugins failed:", e),
-    );
+    await updatePlugins().catch((e) => {
+      console.error("[PlaceholderCord] updatePlugins failed:", e);
+      logger.log("updatePlugins failed:", e);
+    });
+    console.log("[PlaceholderCord] plugins registered");
 
     // Start PlaceholderCord (Bunny) plugins, including the Native Bridge core
     // plugin, and wait for the whole sweep to settle before touching Vendetta
@@ -76,6 +79,7 @@ export default async () => {
     // smaller batches and a small interval. This keeps the UI responsive while
     // plugins initialize in the background.
     await initPlugins({ staggerInterval: 500, batchSize: 2 });
+    console.log("[PlaceholderCord] plugins started");
 
     // Vendetta plugins (Bubble Chat, Virtual Camera, anything using onLoad/
     // onUnload) start only now, after the Bunny sweep above has fully settled.
@@ -122,16 +126,28 @@ export default async () => {
     );
   };
 
+  // Run the deferred work exactly once. InteractionManager is deprecated in newer React
+  // Native builds and may never call back, so a timer backs it up.
+  let deferredStarted = false;
+  const startDeferred = () => {
+    if (deferredStarted) return;
+    deferredStarted = true;
+    runDeferred().catch((e) =>
+      console.error("[PlaceholderCord] deferred init failed:", e),
+    );
+  };
+
   // Preferred: wait until interactions finish (animations / navigation).
   try {
     InteractionManager.runAfterInteractions(() => {
       // small delay to ensure native lifecycle settled
-      setTimeout(runDeferred, 50);
+      setTimeout(startDeferred, 50);
     });
   } catch (e) {
     // Fallback if InteractionManager isn't available for any reason.
-    setTimeout(runDeferred, 200);
+    setTimeout(startDeferred, 200);
   }
+  setTimeout(startDeferred, 3000);
 
   // Final ready log for basic UI availability.
   logger.log("PlaceholderCord is ready.");
