@@ -37,6 +37,7 @@ export const getCorePlugins = (): CorePluginRecord => ({
   "bunny.fixembed": makeLazyPlugin(() => require("./fixembed")),
   "bunny.chatboxavatar": makeLazyPlugin(() => require("./chatboxavatar")),
   "bunny.nativebridge": makeLazyPlugin(() => require("./nativebridge"), false),
+  "bunny.accountswitcher": makeLazyPlugin(() => require("./accountswitcher")),
 });
 
 /**
