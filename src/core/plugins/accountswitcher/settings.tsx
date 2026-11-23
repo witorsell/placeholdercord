@@ -3,17 +3,11 @@ import { findByStoreName } from "@metro";
 import { React, ReactNative } from "@metro/common";
 import { Stack, TableRow, TableRowGroup, TableSwitchRow } from "@metro/common/components";
 
-import { avatarUrl, getCurrentAccount, openLoginForNewAccount, saveCurrentAccount, switchTo } from "./auth";
+import AccountAvatar from "./AccountAvatar";
+import { getCurrentAccount, openLoginForNewAccount, saveCurrentAccount, switchTo } from "./auth";
 import { accountStoreReady, isAutoSaveEnabled, listAccounts, removeAccount, SavedAccount, setAutoSave } from "./storage";
 
-const { Alert, Image, View } = ReactNative;
-
-function AccountAvatar({ account }: { account: SavedAccount; }) {
-    const uri = avatarUrl(account);
-    return uri
-        ? <Image source={{ uri }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-        : <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#4e5058" }} />;
-}
+const { Alert } = ReactNative;
 
 export default function AccountSwitcherSettings() {
     const [, forceUpdate] = React.useReducer((x: number) => ~x, 0);
