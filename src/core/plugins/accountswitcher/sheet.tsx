@@ -7,7 +7,7 @@ import { TableRadioGroup, TableRadioRow, TableRow, TableRowGroup } from "@metro/
 
 import AccountAvatar from "./AccountAvatar";
 import { getCurrentAccount, openLoginForNewAccount, saveCurrentAccount, switchTo } from "./auth";
-import { accountStoreReady, listAccounts } from "./storage";
+import { listAccounts } from "./storage";
 
 const { Alert } = ReactNative;
 
@@ -15,19 +15,16 @@ const SHEET_KEY = "you-account-action-sheet-key";
 const actionSheet = findByPropsLazy("openLazy", "hideActionSheet");
 
 function AccountsSection() {
-    const [ready, setReady] = React.useState(false);
-
-    React.useEffect(() => {
-        accountStoreReady().then(() => {
-            saveCurrentAccount();
-            setReady(true);
-        });
-    }, []);
-
-    if (!ready) return null;
+    // Rendered straight away so the sheet is measured with it. The store is initialised long before
+    // anyone can open the sheet; if it somehow is not, skip the section instead of throwing.
+    let accounts: ReturnType<typeof listAccounts>;
+    try {
+        accounts = listAccounts();
+    } catch {
+        return null;
+    }
 
     const current = getCurrentAccount();
-    const accounts = listAccounts();
 
     const onSelect = (id: string) => {
         const account = accounts.find(a => a.id === id);
@@ -86,13 +83,17 @@ const wrapped = new WeakMap<object, any>();
 
 // Discord's sheet renders ActionSheet > Stack > [sections]. The Stack's children are appended to, so
 // whatever it already shows (status, custom status, its own accounts group when enabled) is untouched.
+// The sheet's default export is React.memo(fn) on 352+, so unwrap it, wrap the inner function and
+// memo it again.
 function withAccounts(Original: any) {
-    if (typeof Original !== "function") return Original;
+    const isMemo = typeof Original === "object" && Original !== null;
+    const inner = isMemo ? Original.type : Original;
+    if (typeof inner !== "function") return Original;
 
     let Wrapped = wrapped.get(Original);
     if (!Wrapped) {
-        Wrapped = function YouAccountActionSheetWithAccounts(props: any) {
-            const ret = Original(props);
+        const Component = function YouAccountActionSheetWithAccounts(props: any) {
+            const ret = inner(props);
             const stack = ret?.props?.children;
             const sections = stack?.props?.children;
             if (stack?.props && Array.isArray(sections)) {
@@ -100,6 +101,7 @@ function withAccounts(Original: any) {
             }
             return ret;
         };
+        Wrapped = isMemo ? React.memo(Component, Original.compare ?? undefined) : Component;
         wrapped.set(Original, Wrapped);
     }
     return Wrapped;
