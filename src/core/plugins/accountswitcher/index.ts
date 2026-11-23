@@ -1,7 +1,13 @@
 import { defineCorePlugin } from "..";
-import { logger } from "@lib/utils/logger";
+import { FluxDispatcher } from "@metro/common";
 
+import { saveCurrentAccount } from "./auth";
 import AccountSwitcherSettings from "./settings";
+import { accountStoreReady, isAutoSaveEnabled } from "./storage";
+
+const syncCurrentAccount = () => {
+    if (isAutoSaveEnabled()) saveCurrentAccount();
+};
 
 export default defineCorePlugin({
     manifest: {
@@ -12,7 +18,7 @@ export default defineCorePlugin({
         main: "",
         display: {
             name: "Account Switcher",
-            description: "Save multiple Discord accounts and switch between them without logging out.",
+            description: "Save accounts and switch between them without logging out.",
             authors: [{ name: "witorsell", id: "1524888236382617681" }],
         },
     },
@@ -20,9 +26,11 @@ export default defineCorePlugin({
     SettingsComponent: AccountSwitcherSettings,
 
     start() {
-        logger.log("[AccountSwitcher] started");
+        FluxDispatcher.subscribe("CONNECTION_OPEN", syncCurrentAccount);
+        accountStoreReady().then(syncCurrentAccount);
     },
+
     stop() {
-        logger.log("[AccountSwitcher] stopped");
+        FluxDispatcher.unsubscribe("CONNECTION_OPEN", syncCurrentAccount);
     },
 });

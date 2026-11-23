@@ -1,42 +1,44 @@
-import { createStorage as createStorageNew } from "@lib/api/storage";
+import { awaitStorage, createStorage } from "@lib/api/storage";
 
 export interface SavedAccount {
-    token: string;
-    username: string;
-    discriminator: string;
-    avatarUrl: string | null;
     id: string;
+    username: string;
+    avatar: string | null;
+    token: string;
 }
 
-export interface AccountSwitcherData {
+interface AccountSwitcherData {
     accounts: SavedAccount[];
+    autoSave: boolean;
 }
 
-export const accountStore = createStorageNew<AccountSwitcherData>(
-    "placeholdercord/accountswitcher",
-    { dflt: { accounts: [] } },
+export const accountStore = createStorage<AccountSwitcherData>(
+    "plugins/storage/bunny.accountswitcher.json",
+    { dflt: { accounts: [], autoSave: true } },
 );
 
-export function getSavedAccounts(): SavedAccount[] {
-    try {
-        return (accountStore as any).accounts ?? [];
-    } catch {
-        return [];
-    }
+export const accountStoreReady = () => awaitStorage(accountStore);
+
+export function listAccounts(): SavedAccount[] {
+    return (accountStore.accounts ?? []).map(a => ({ ...a }));
 }
 
-export function saveAccount(account: SavedAccount) {
-    const existing = getSavedAccounts();
-    const idx = existing.findIndex(a => a.id === account.id);
-    if (idx >= 0) {
-        existing[idx] = account;
-    } else {
-        existing.push(account);
-    }
-    (accountStore as any).accounts = existing;
+export function upsertAccount(account: SavedAccount) {
+    const accounts = listAccounts();
+    const idx = accounts.findIndex(a => a.id === account.id);
+    if (idx >= 0) accounts[idx] = account;
+    else accounts.push(account);
+    accountStore.accounts = accounts;
 }
 
 export function removeAccount(id: string) {
-    const existing = getSavedAccounts();
-    (accountStore as any).accounts = existing.filter(a => a.id !== id);
+    accountStore.accounts = listAccounts().filter(a => a.id !== id);
+}
+
+export function isAutoSaveEnabled(): boolean {
+    return accountStore.autoSave !== false;
+}
+
+export function setAutoSave(value: boolean) {
+    accountStore.autoSave = value;
 }

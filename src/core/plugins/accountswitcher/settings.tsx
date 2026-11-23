@@ -1,141 +1,109 @@
-import { defineCorePlugin } from "..";
 import { showToast } from "@lib/ui/toasts";
-import { findByProps, findByPropsLazy, findByStoreName } from "@metro";
-import { FluxDispatcher, React, ReactNative } from "@metro/common";
-import { Stack, TableRow, TableRowGroup } from "@metro/common/components";
+import { findByStoreName } from "@metro";
+import { React, ReactNative } from "@metro/common";
+import { Stack, TableRow, TableRowGroup, TableSwitchRow } from "@metro/common/components";
 
-import { getSavedAccounts, removeAccount, saveAccount, SavedAccount } from "./storage";
+import { avatarUrl, getCurrentAccount, openLoginForNewAccount, saveCurrentAccount, switchTo } from "./auth";
+import { accountStoreReady, isAutoSaveEnabled, listAccounts, removeAccount, SavedAccount, setAutoSave } from "./storage";
 
-const { View, Text, Pressable, Image, Alert } = ReactNative;
-const UserStore = findByStoreName("UserStore");
-const Flux = findByProps("useStateFromStores");
-const tokens = findByPropsLazy("getToken");
+const { Alert, Image, View } = ReactNative;
 
-function getCurrentToken(): string | null {
-    try {
-        return tokens?.getToken?.() ?? null;
-    } catch {
-        return null;
-    }
-}
-
-function switchToAccount(account: SavedAccount) {
-    try {
-        FluxDispatcher.dispatch({
-            type: "LOGIN_TOKEN",
-            token: account.token,
-            fingerprint: null,
-        });
-        showToast(`Switching to ${account.username}...`);
-    } catch (e) {
-        showToast("Switch failed");
-        console.error("[AccountSwitcher] Switch failed:", e);
-    }
+function AccountAvatar({ account }: { account: SavedAccount; }) {
+    const uri = avatarUrl(account);
+    return uri
+        ? <Image source={{ uri }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+        : <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#4e5058" }} />;
 }
 
 export default function AccountSwitcherSettings() {
     const [, forceUpdate] = React.useReducer((x: number) => ~x, 0);
-    const currentUser = Flux?.useStateFromStores?.([UserStore], () => UserStore?.getCurrentUser?.());
-    const accounts = getSavedAccounts();
+    const [ready, setReady] = React.useState(false);
 
-    const handleSaveCurrent = () => {
-        const token = getCurrentToken();
-        if (!token || !currentUser) {
-            showToast("No account to save");
-            return;
-        }
-
-        saveAccount({
-            token,
-            username: currentUser.username,
-            discriminator: currentUser.discriminator ?? "0",
-            avatarUrl: currentUser.getAvatarURL?.({ size: 80 }) ?? null,
-            id: currentUser.id,
+    React.useEffect(() => {
+        accountStoreReady().then(() => {
+            saveCurrentAccount();
+            setReady(true);
         });
-        showToast(`Saved ${currentUser.username}`);
-        forceUpdate();
+    }, []);
+
+    if (!ready) return null;
+
+    const current = getCurrentAccount();
+    const accounts = listAccounts();
+    const label = (a: SavedAccount) => a.username;
+
+    const confirm = (title: string, body: string, action: string, onConfirm: () => void, destructive = false) =>
+        Alert.alert(title, body, [
+            { text: "Cancel", style: "cancel" },
+            { text: action, style: destructive ? "destructive" : "default", onPress: onConfirm },
+        ]);
+
+    const doSwitch = (account: SavedAccount) =>
+        switchTo(account).catch(e => {
+            console.error("[AccountSwitcher] switch failed", e);
+            showToast(`Switch failed: ${e?.message ?? e}`);
+        });
+
+    const onPressAccount = (account: SavedAccount) => {
+        const isCurrent = current?.id === account.id;
+        Alert.alert(label(account), isCurrent ? "This is the account you are on." : undefined, [
+            ...(isCurrent ? [] : [{ text: "Switch", onPress: () => doSwitch(account) }]),
+            { text: "Remove", style: "destructive" as const, onPress: () => onRemove(account) },
+            { text: "Cancel", style: "cancel" as const },
+        ]);
     };
 
-    const handleSwitch = (account: SavedAccount) => {
-        if (currentUser?.id === account.id) {
-            showToast("Already on this account");
-            return;
-        }
-
-        Alert.alert(
-            "Switch Account",
-            `Switch to ${account.username}?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Switch",
-                    onPress: () => switchToAccount(account),
-                },
-            ],
+    const onAdd = () => {
+        confirm(
+            "Add account",
+            "Your current account is saved and stays logged in on Discord's side. You will land on the login screen, and the new account is saved when you sign in.",
+            "Continue",
+            () => {
+                saveCurrentAccount();
+                openLoginForNewAccount();
+            },
         );
     };
 
-    const handleRemove = (account: SavedAccount) => {
-        Alert.alert(
-            "Remove Account",
-            `Remove ${account.username} from saved accounts?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Remove",
-                    style: "destructive",
-                    onPress: () => {
-                        removeAccount(account.id);
-                        showToast(`Removed ${account.username}`);
-                        forceUpdate();
-                    },
-                },
-            ],
-        );
-    };
+    const onRemove = (account: SavedAccount) =>
+        confirm("Remove account", `Forget ${label(account)}? This only deletes the saved token here.`, "Remove", () => {
+            removeAccount(account.id);
+            forceUpdate();
+        }, true);
 
     return (
         <Stack style={{ padding: 16 }} spacing={16}>
-            <TableRowGroup title="Current Account">
+            <TableRowGroup title="Accounts">
+                {accounts.length === 0 && <TableRow label="No saved accounts" />}
+                {accounts.map(account => (
+                    <TableRow
+                        key={account.id}
+                        label={label(account)}
+                        subLabel={current?.id === account.id ? "Current account" : "Tap to switch or remove"}
+                        icon={<AccountAvatar account={account} />}
+                        onPress={() => onPressAccount(account)}
+                    />
+                ))}
+            </TableRowGroup>
+
+            <TableRowGroup title="Add">
                 <TableRow
-                    label={currentUser ? `${currentUser.username}${currentUser.discriminator && currentUser.discriminator !== "0" ? `#${currentUser.discriminator}` : ""}` : "Not logged in"}
-                    subLabel={currentUser ? `ID: ${currentUser.id}` : undefined}
-                    onPress={handleSaveCurrent}
-                    trailing={
-                        <Text style={{ color: "#5865F2", fontSize: 14, fontWeight: "600" }}>
-                            {accounts.some(a => a.id === currentUser?.id) ? "Update" : "Save"}
-                        </Text>
-                    }
+                    label="Add account"
+                    subLabel="Keeps this account logged in, opens the login screen"
+                    onPress={onAdd}
                 />
             </TableRowGroup>
 
-            <TableRowGroup title={`Saved Accounts (${accounts.length})`}>
-                {accounts.length === 0 ? (
-                    <TableRow
-                        label="No saved accounts"
-                        subLabel="Tap your current account above to save it"
-                    />
-                ) : (
-                    accounts.map(account => (
-                        <TableRow
-                            key={account.id}
-                            label={`${account.username}${account.discriminator && account.discriminator !== "0" ? `#${account.discriminator}` : ""}`}
-                            subLabel={currentUser?.id === account.id ? "Currently active" : "Tap to switch"}
-                            onPress={() => handleSwitch(account)}
-                            onLongPress={() => handleRemove(account)}
-                            trailing={
-                                currentUser?.id === account.id ? (
-                                    <View style={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: 4,
-                                        backgroundColor: "#3ba55c",
-                                    }} />
-                                ) : undefined
-                            }
-                        />
-                    ))
-                )}
+            <TableRowGroup title="Options">
+                <TableSwitchRow
+                    label="Save accounts automatically"
+                    subLabel="Store the token of whichever account you sign in with"
+                    value={isAutoSaveEnabled()}
+                    onValueChange={(v: boolean) => {
+                        setAutoSave(v);
+                        forceUpdate();
+                    }}
+                />
             </TableRowGroup>
         </Stack>
     );
